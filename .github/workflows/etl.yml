@@ -34,9 +34,10 @@ jobs:
 
       - name: Copy output to data repo
         run: |
-          cp output/services.csv data-repo/data/services.csv
-          cp output/services.json data-repo/data/services.json
-          cp output/SOURCES.md data-repo/SOURCES.md
+          # Copy per-source government data
+          cp -r output/government/* data-repo/government/
+          # Copy combined data
+          cp -r output/combined/* data-repo/combined/
 
       - name: Commit and push to data repo
         run: |
