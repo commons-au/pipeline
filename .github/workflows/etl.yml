@@ -35,7 +35,7 @@ jobs:
       - name: Copy output to data repo
         run: |
           # Copy per-source government data
-          cp -r output/government/* data-repo/government/
+          cp -r output/gov/* data-repo/gov/
           # Copy combined data
           cp -r output/combined/* data-repo/combined/
 
@@ -44,7 +44,7 @@ jobs:
           cd data-repo
           DATE=$(date -u +"%d %B %Y")
           RECORDS=$(tail -n +2 combined/services.csv | wc -l | tr -d ' ')
-          SOURCES=$(ls government/*/SOURCES.md 2>/dev/null | wc -l | tr -d ' ')
+          SOURCES=$(ls gov/*/SOURCES.md 2>/dev/null | wc -l | tr -d ' ')
           STATUS="**Last updated**: ${DATE} | **${RECORDS} services** from **${SOURCES} state(s)**"
           export STATUS
           python3 << 'PYEOF'

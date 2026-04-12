@@ -108,13 +108,13 @@ def write_per_source(all_records):
         if source_records:
             # Use a clean filename from the source id (strip the jurisdiction prefix)
             filename = source["id"].split("_", 1)[-1] if "_" in source["id"] else source["id"]
-            path = os.path.join(OUTPUT_DIR, "government", folder, f"{filename}.csv")
+            path = os.path.join(OUTPUT_DIR, "gov", folder, f"{filename}.csv")
             write_csv(source_records, path)
 
     # Write per-state SOURCES.md
     for jurisdiction, sources_list in sources_by_jurisdiction.items():
         folder = JURISDICTION_FOLDERS.get(jurisdiction, "other")
-        path = os.path.join(OUTPUT_DIR, "government", folder, "SOURCES.md")
+        path = os.path.join(OUTPUT_DIR, "gov", folder, "SOURCES.md")
         write_sources(sources_list, path)
 
 
