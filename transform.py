@@ -1,0 +1,176 @@
+"""
+Transform raw source data into the commons-au standard schema.
+
+Reads CSVs from sources/, applies field mappings and cleaning,
+and outputs standardised records.
+"""
+
+import csv
+import os
+from datetime import date
+from config import SOURCES, CATEGORIES
+
+
+SOURCES_DIR = os.path.join(os.path.dirname(__file__), "sources")
+
+
+def clean_text(value):
+    """Clean whitespace and normalise a text field."""
+    if not value:
+        return ""
+    return " ".join(value.strip().split())
+
+
+def map_category(raw_categories):
+    """Map source category labels to our standard categories."""
+    for raw in raw_categories:
+        raw_lower = raw.strip().lower()
+        if raw_lower in CATEGORIES:
+            return CATEGORIES[raw_lower]
+    return "other"
+
+
+def build_hours_melbourne(row, field_map):
+    """Build hours string from Melbourne's per-day columns."""
+    days = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"]
+    day_abbrevs = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    parts = []
+    for day, abbrev in zip(days, day_abbrevs):
+        key = f"hours_{day}"
+        if key in field_map:
+            col = field_map[key]
+            value = clean_text(row.get(col, ""))
+            if value and value.lower() not in ("closed", "n/a", ""):
+                parts.append(f"{abbrev}: {value}")
+    return "; ".join(parts)
+
+
+def build_hours_casey(row, field_map):
+    """Build hours string from Casey's hours columns."""
+    parts = []
+    for key in ["hours_1", "hours_2"]:
+        if key in field_map:
+            col = field_map[key]
+            value = clean_text(row.get(col, ""))
+            if value:
+                parts.append(value)
+    return "; ".join(parts)
+
+
+def transform_melbourne(row, source):
+    """Transform a City of Melbourne record."""
+    field_map = source["field_map"]
+
+    # Build categories from the multiple category columns
+    raw_categories = []
+    for key in ["category_1", "category_2", "category_3", "category_4", "category_5", "category_6"]:
+        if key in field_map:
+            val = clean_text(row.get(field_map[key], ""))
+            if val and val.upper() != "N/A":
+                raw_categories.append(val)
+
+    return {
+        "name": clean_text(row.get(field_map.get("name", ""), "")),
+        "description": clean_text(row.get(field_map.get("description", ""), "")),
+        "category": map_category(raw_categories),
+        "address": clean_text(row.get(field_map.get("address", ""), "")),
+        "suburb": clean_text(row.get(field_map.get("suburb", ""), "")),
+        "state": source["jurisdiction"],
+        "postcode": "",
+        "latitude": clean_text(row.get(field_map.get("latitude", ""), "")),
+        "longitude": clean_text(row.get(field_map.get("longitude", ""), "")),
+        "phone": clean_text(row.get(field_map.get("phone", ""), "")),
+        "email": clean_text(row.get(field_map.get("email", ""), "")),
+        "website": clean_text(row.get(field_map.get("website", ""), "")),
+        "hours": build_hours_melbourne(row, field_map),
+        "eligibility": "",
+        "cost": clean_text(row.get(field_map.get("cost", ""), "")),
+    }
+
+
+def transform_casey(row, source):
+    """Transform a City of Casey record."""
+    field_map = source["field_map"]
+
+    return {
+        "name": clean_text(row.get(field_map.get("name", ""), "")),
+        "description": clean_text(row.get(field_map.get("description", ""), "")),
+        "category": "food",
+        "address": clean_text(row.get(field_map.get("address", ""), "")),
+        "suburb": clean_text(row.get(field_map.get("suburb", ""), "")),
+        "state": source["jurisdiction"],
+        "postcode": clean_text(row.get(field_map.get("postcode", ""), "")),
+        "latitude": clean_text(row.get(field_map.get("latitude", ""), "")),
+        "longitude": clean_text(row.get(field_map.get("longitude", ""), "")),
+        "phone": clean_text(row.get(field_map.get("phone", ""), "")),
+        "email": clean_text(row.get(field_map.get("email", ""), "")),
+        "website": clean_text(row.get(field_map.get("website", ""), "")),
+        "hours": build_hours_casey(row, field_map),
+        "eligibility": "",
+        "cost": "Free",
+    }
+
+
+# Map source IDs to their transform functions
+TRANSFORMERS = {
+    "vic_melbourne_helping_out": transform_melbourne,
+    "vic_casey_food_relief": transform_casey,
+}
+
+
+def transform_source(source):
+    """Transform all records from a single source."""
+    source_id = source["id"]
+    source_path = os.path.join(SOURCES_DIR, f"{source_id}.csv")
+
+    if not os.path.exists(source_path):
+        print(f"  WARNING: Source file not found: {source_path}")
+        return []
+
+    transformer = TRANSFORMERS.get(source_id)
+    if not transformer:
+        print(f"  WARNING: No transformer for source: {source_id}")
+        return []
+
+    records = []
+    today = date.today().isoformat()
+
+    with open(source_path, "r", encoding="utf-8") as f:
+        reader = csv.DictReader(f)
+        for i, row in enumerate(reader):
+            record = transformer(row, source)
+
+            # Skip records with no name
+            if not record["name"]:
+                continue
+
+            # Add source metadata and ID
+            record["id"] = f"{source_id}_{i:04d}"
+            record["source_id"] = source_id
+            record["source_name"] = source["name"]
+            record["source_organisation"] = source["organisation"]
+            record["source_jurisdiction"] = source["jurisdiction"]
+            record["source_license"] = source["license"]
+            record["source_url"] = source["dataset_url"]
+            record["source_date"] = today
+
+            records.append(record)
+
+    print(f"  Transformed: {len(records)} records from {source['name']}")
+    return records
+
+
+def main():
+    all_records = []
+
+    for source in SOURCES:
+        print(f"Transforming: {source['name']}...")
+        records = transform_source(source)
+        all_records.extend(records)
+
+    print(f"\nTotal: {len(all_records)} records transformed.")
+    return all_records
+
+
+if __name__ == "__main__":
+    main()
