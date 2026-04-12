@@ -39,6 +39,15 @@ jobs:
           # Copy combined data
           cp -r output/combined/* data-repo/combined/
 
+      - name: Update README with fetch status
+        run: |
+          cd data-repo
+          DATE=$(date -u +"%d %B %Y")
+          RECORDS=$(tail -n +2 combined/services.csv | wc -l | tr -d ' ')
+          SOURCES=$(ls government/*/SOURCES.md 2>/dev/null | wc -l | tr -d ' ')
+          STATUS="**Last updated**: ${DATE} | **${RECORDS} services** from **${SOURCES} state(s)**"
+          sed -i "s|<!-- PIPELINE_STATUS_START -->.*<!-- PIPELINE_STATUS_END -->|<!-- PIPELINE_STATUS_START -->\n${STATUS}\n<!-- PIPELINE_STATUS_END -->|" README.md
+
       - name: Commit and push to data repo
         run: |
           cd data-repo
