@@ -46,7 +46,21 @@ jobs:
           RECORDS=$(tail -n +2 combined/services.csv | wc -l | tr -d ' ')
           SOURCES=$(ls government/*/SOURCES.md 2>/dev/null | wc -l | tr -d ' ')
           STATUS="**Last updated**: ${DATE} | **${RECORDS} services** from **${SOURCES} state(s)**"
-          sed -i "s|<!-- PIPELINE_STATUS_START -->.*<!-- PIPELINE_STATUS_END -->|<!-- PIPELINE_STATUS_START -->\n${STATUS}\n<!-- PIPELINE_STATUS_END -->|" README.md
+          export STATUS
+          python3 << 'PYEOF'
+          import os, re
+          status = os.environ["STATUS"]
+          with open("README.md", "r") as f:
+              content = f.read()
+          content = re.sub(
+              r"<!-- PIPELINE_STATUS_START -->.*?<!-- PIPELINE_STATUS_END -->",
+              f"<!-- PIPELINE_STATUS_START -->\n{status}\n<!-- PIPELINE_STATUS_END -->",
+              content,
+              flags=re.DOTALL,
+          )
+          with open("README.md", "w") as f:
+              f.write(content)
+          PYEOF
 
       - name: Commit and push to data repo
         run: |
