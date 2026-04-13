@@ -37,8 +37,14 @@ jobs:
           # Remove old data files (keep .gitkeep), then copy fresh output
           find data-repo/gov -name '*.csv' -o -name 'SOURCES.md' | xargs rm -f
           find data-repo/combined -name '*.csv' -o -name '*.json' -o -name 'SOURCES.md' | xargs rm -f
-          # Copy per-source government data (creates new state dirs as needed)
+          find data-repo/osm -name '*.csv' -o -name 'SOURCES.md' 2>/dev/null | xargs rm -f
+          # Copy per-source government data
           cp -r output/gov/. data-repo/gov/
+          # Copy OSM data (create dir if needed)
+          if [ -d output/osm ]; then
+            mkdir -p data-repo/osm
+            cp -r output/osm/. data-repo/osm/
+          fi
           # Copy combined data
           cp -r output/combined/. data-repo/combined/
 

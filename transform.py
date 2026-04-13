@@ -419,6 +419,83 @@ TRANSFORMERS = {
 }
 
 
+OSM_AMENITY_CATEGORIES = {
+    "social_facility": "community",
+    "community_centre": "community",
+}
+
+OSM_OFFICE_CATEGORIES = {
+    "ngo": "community",
+    "charity": "community",
+}
+
+OSM_SOCIAL_FACILITY_CATEGORIES = {
+    "food_bank": "food",
+    "soup_kitchen": "food",
+    "shelter": "housing",
+    "clothing_bank": "personal_care",
+    "counselling": "mental_health",
+    "outreach": "community",
+    "group_home": "housing",
+    "nursing_home": "health",
+    "workshop": "employment",
+}
+
+
+def transform_osm(row, source):
+    """Transform an OpenStreetMap record."""
+    field_map = source["field_map"]
+
+    amenity = clean_text(row.get(field_map.get("amenity", ""), ""))
+    office = clean_text(row.get(field_map.get("office", ""), ""))
+    sf_type = clean_text(row.get(field_map.get("social_facility_type", ""), ""))
+
+    # Determine category
+    if sf_type and sf_type in OSM_SOCIAL_FACILITY_CATEGORIES:
+        category = OSM_SOCIAL_FACILITY_CATEGORIES[sf_type]
+    elif amenity in OSM_AMENITY_CATEGORIES:
+        category = OSM_AMENITY_CATEGORIES[amenity]
+    elif office in OSM_OFFICE_CATEGORIES:
+        category = OSM_OFFICE_CATEGORIES[office]
+    else:
+        category = "community"
+
+    # Build description
+    parts = []
+    if sf_type:
+        parts.append(sf_type.replace("_", " ").title())
+    elif amenity:
+        parts.append(amenity.replace("_", " ").title())
+    elif office:
+        parts.append(office.upper())
+    sf_for = clean_text(row.get(field_map.get("social_facility_for", ""), ""))
+    if sf_for:
+        parts.append(f"for {sf_for}")
+    description = " ".join(parts)
+
+    return {
+        "name": clean_text(row.get(field_map.get("name", ""), "")),
+        "description": description,
+        "category": category,
+        "address": clean_text(row.get(field_map.get("address", ""), "")),
+        "suburb": clean_text(row.get(field_map.get("suburb", ""), "")),
+        "state": clean_text(row.get(field_map.get("state", ""), "")),
+        "postcode": clean_text(row.get(field_map.get("postcode", ""), "")),
+        "latitude": clean_text(row.get(field_map.get("latitude", ""), "")),
+        "longitude": clean_text(row.get(field_map.get("longitude", ""), "")),
+        "phone": clean_text(row.get(field_map.get("phone", ""), "")),
+        "email": clean_text(row.get(field_map.get("email", ""), "")),
+        "website": clean_text(row.get(field_map.get("website", ""), "")),
+        "hours": clean_text(row.get(field_map.get("hours", ""), "")),
+        "eligibility": "",
+        "cost": "",
+    }
+
+
+# Add OSM to transformers
+TRANSFORMERS["osm_social_facilities"] = transform_osm
+
+
 def transform_source(source):
     """Transform all records from a single source."""
     source_id = source["id"]
