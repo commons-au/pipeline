@@ -414,6 +414,8 @@ TRANSFORMERS = {
     "vic_neighbourhood_houses": lambda row, src: transform_generic(row, src, "community", "Neighbourhood house"),
     "vic_casey_libraries": lambda row, src: transform_generic(row, src, "community", "Library"),
     "vic_casey_maternal_health": lambda row, src: transform_generic(row, src, "health", "Maternal and child health centre"),
+    "vic_ballarat_kindergartens": lambda row, src: transform_generic(row, src, "education", "Kindergarten"),
+    "vic_ballarat_early_learning": lambda row, src: transform_generic(row, src, "education", "Early learning centre"),
 }
 
 
