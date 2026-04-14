@@ -29,6 +29,68 @@ def strip_html(value):
     return re.sub(r"<[^>]+>", "", value).strip()
 
 
+STATE_NAME_MAP = {
+    "new south wales": "NSW",
+    "victoria": "VIC",
+    "queensland": "QLD",
+    "south australia": "SA",
+    "western australia": "WA",
+    "tasmania": "TAS",
+    "northern territory": "NT",
+    "australian capital territory": "ACT",
+    "qld": "QLD",
+    "nsw": "NSW",
+    "vic": "VIC",
+    "sa": "SA",
+    "wa": "WA",
+    "tas": "TAS",
+    "nt": "NT",
+    "act": "ACT",
+    "(blank)": "",
+}
+
+# Australian postcode ranges to state mapping
+POSTCODE_STATE_MAP = [
+    (200, 299, "ACT"),
+    (800, 899, "NT"),
+    (900, 999, "NT"),
+    (1000, 2599, "NSW"),
+    (2600, 2619, "ACT"),
+    (2620, 2899, "NSW"),
+    (2900, 2920, "ACT"),
+    (2921, 2999, "NSW"),
+    (3000, 3999, "VIC"),
+    (4000, 4999, "QLD"),
+    (5000, 5799, "SA"),
+    (5800, 5999, "SA"),
+    (6000, 6797, "WA"),
+    (6800, 6999, "WA"),
+    (7000, 7799, "TAS"),
+    (7800, 7999, "TAS"),
+]
+
+
+def normalise_state(state):
+    """Normalise state to 2-3 letter code."""
+    if not state:
+        return ""
+    return STATE_NAME_MAP.get(state.strip().lower(), state.strip().upper())
+
+
+def state_from_postcode(postcode):
+    """Derive state from Australian postcode."""
+    if not postcode:
+        return ""
+    try:
+        pc = int(postcode.strip()[:4])
+        for low, high, state in POSTCODE_STATE_MAP:
+            if low <= pc <= high:
+                return state
+    except (ValueError, IndexError):
+        pass
+    return ""
+
+
 def extract_state_from_address(address):
     """Try to extract Australian state from an address string."""
     states = ["NSW", "VIC", "QLD", "SA", "WA", "TAS", "NT", "ACT"]
@@ -521,6 +583,30 @@ def transform_source(source):
             # Skip records with no name
             if not record["name"]:
                 continue
+
+            # Normalise state
+            record["state"] = normalise_state(record.get("state", ""))
+
+            # If state is still empty, try to derive from postcode
+            if not record["state"] and record.get("postcode"):
+                record["state"] = state_from_postcode(record["postcode"])
+
+            # If still empty, try to extract from address
+            if not record["state"] and record.get("address"):
+                record["state"] = extract_state_from_address(record["address"])
+
+            # Score record quality
+            has_location = bool(record.get("address", "").strip() or record.get("latitude", "").strip())
+            has_contact = bool(record.get("phone", "").strip() or record.get("website", "").strip() or record.get("email", "").strip())
+            has_description = bool(record.get("description", "").strip())
+            has_state = bool(record.get("state", "").strip())
+
+            if has_location and has_contact:
+                record["quality"] = "complete"
+            elif has_location or has_contact:
+                record["quality"] = "partial"
+            else:
+                record["quality"] = "minimal"
 
             # Add source metadata and ID
             record["id"] = f"{source_id}_{i:04d}"

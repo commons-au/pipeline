@@ -37,6 +37,7 @@ SCHEMA_FIELDS = [
     "source_license",
     "source_url",
     "source_date",
+    "quality",
 ]
 
 CATEGORIES = {
@@ -76,7 +77,26 @@ CATEGORIES = {
     "transport": "transport",
     "technology": "technology",
     "personal care": "personal_care",
-    # SA Community Directory categories
+    # SA Community Directory — Primary_Category values
+    "recreation": "community",
+    "community organisation & development": "community",
+    "personal & family support": "family",
+    "health & disability": "health",
+    "accommodation": "housing",
+    "religions & philosophies": "community",
+    "communication & information services": "information",
+    "environment & heritage": "community",
+    "public safety": "community",
+    "finance, income, business": "financial",
+    "animals, birds": "community",
+    "government": "information",
+    "citizenship, nationality": "community",
+    "material & practical needs": "financial",
+    "law & justice": "legal",
+    "rural organisation & development": "community",
+    "cultural groups": "community",
+    "client groups": "community",
+    # Other SA/general category labels
     "community organisation": "community",
     "community organisations": "community",
     "community support": "community",
@@ -85,7 +105,6 @@ CATEGORIES = {
     "churches": "community",
     "sport": "community",
     "sporting clubs": "community",
-    "government": "information",
     "government services": "information",
     "support groups": "community",
     "self help": "community",
