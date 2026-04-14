@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  fetch-gov:
+  fetch:
     name: Fetch Government Data
     runs-on: ubuntu-latest
     steps:
@@ -13,35 +13,17 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install -r requirements.txt
-      - run: python fetch.py --filter gov
+      - run: python fetch.py
       - uses: actions/upload-artifact@v4
         with:
-          name: sources-gov
-          path: sources/
-          retention-days: 1
-
-  fetch-osm:
-    name: Fetch OpenStreetMap Data
-    runs-on: ubuntu-latest
-    continue-on-error: true
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-      - run: pip install -r requirements.txt
-      - run: python fetch.py --filter osm
-      - uses: actions/upload-artifact@v4
-        if: success()
-        with:
-          name: sources-osm
+          name: sources
           path: sources/
           retention-days: 1
 
   build:
     name: Transform and Merge
     runs-on: ubuntu-latest
-    needs: [fetch-gov]
+    needs: [fetch]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -51,25 +33,7 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: sources-gov
-          path: sources/
-
-      - name: Check if OSM data available
-        id: osm-check
-        run: |
-          if gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --jq '.artifacts[].name' | grep -q sources-osm; then
-            echo "available=true" >> $GITHUB_OUTPUT
-          else
-            echo "available=false" >> $GITHUB_OUTPUT
-            echo "OSM data not available — skipping"
-          fi
-        env:
-          GH_TOKEN: ${{ github.token }}
-
-      - uses: actions/download-artifact@v4
-        if: steps.osm-check.outputs.available == 'true'
-        with:
-          name: sources-osm
+          name: sources
           path: sources/
 
       - run: python merge.py
@@ -98,12 +62,7 @@ jobs:
         run: |
           find data-repo/gov -name '*.csv' -o -name 'SOURCES.md' | xargs rm -f
           find data-repo/combined -name '*.csv' -o -name '*.json' -o -name '*.db' -o -name 'SOURCES.md' | xargs rm -f
-          find data-repo/osm -name '*.csv' -o -name 'SOURCES.md' 2>/dev/null | xargs rm -f
           cp -r output/gov/. data-repo/gov/
-          if [ -d output/osm ]; then
-            mkdir -p data-repo/osm
-            cp -r output/osm/. data-repo/osm/
-          fi
           cp -r output/combined/. data-repo/combined/
 
       - name: Update README with fetch status
@@ -138,6 +97,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "Update data from government + OSM sources ($(date -u +%Y-%m-%d))"
+            git commit -m "Update government data ($(date -u +%Y-%m-%d))"
             git push
           fi

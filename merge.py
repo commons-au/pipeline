@@ -173,35 +173,20 @@ def write_per_source(all_records):
         source_records = by_source.get(source["id"], [])
         if not source_records:
             continue
+        folder = JURISDICTION_FOLDERS.get(source["jurisdiction"], "other")
+        filename = source["id"].split("_", 1)[-1] if "_" in source["id"] else source["id"]
+        path = os.path.join(OUTPUT_DIR, "gov", folder, f"{filename}.csv")
+        write_csv(source_records, path)
 
-        # OSM goes to osm/ folder, everything else to gov/{state}/
-        if source["id"].startswith("osm_"):
-            filename = source["id"]
-            path = os.path.join(OUTPUT_DIR, "osm", f"{filename}.csv")
-            write_csv(source_records, path)
-        else:
-            folder = JURISDICTION_FOLDERS.get(source["jurisdiction"], "other")
-            filename = source["id"].split("_", 1)[-1] if "_" in source["id"] else source["id"]
-            path = os.path.join(OUTPUT_DIR, "gov", folder, f"{filename}.csv")
-            write_csv(source_records, path)
-
-    # Write per-state SOURCES.md for gov sources
-    gov_sources_by_jurisdiction = defaultdict(list)
-    osm_sources = []
+    # Write per-state SOURCES.md
+    sources_by_jurisdiction = defaultdict(list)
     for source in SOURCES:
-        if source["id"].startswith("osm_"):
-            osm_sources.append(source)
-        else:
-            gov_sources_by_jurisdiction[source["jurisdiction"]].append(source)
+        sources_by_jurisdiction[source["jurisdiction"]].append(source)
 
-    for jurisdiction, sources_list in gov_sources_by_jurisdiction.items():
+    for jurisdiction, sources_list in sources_by_jurisdiction.items():
         folder = JURISDICTION_FOLDERS.get(jurisdiction, "other")
         path = os.path.join(OUTPUT_DIR, "gov", folder, "SOURCES.md")
         write_sources(sources_list, path)
-
-    # Write OSM SOURCES.md
-    if osm_sources:
-        write_sources(osm_sources, os.path.join(OUTPUT_DIR, "osm", "SOURCES.md"))
 
 
 def main():
