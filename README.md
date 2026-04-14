@@ -55,4 +55,4 @@ All data sourced from Australian government portals is used under Creative Commo
 
 ## License
 
-This pipeline code is released under [CC0 1.0](LICENSE) — public domain, no restrictions.
+This pipeline code is released under [CC0 1.0](LICENSE) - public domain, no restrictions.
