@@ -54,8 +54,20 @@ jobs:
           name: sources-gov
           path: sources/
 
+      - name: Check if OSM data available
+        id: osm-check
+        run: |
+          if gh api repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts --jq '.artifacts[].name' | grep -q sources-osm; then
+            echo "available=true" >> $GITHUB_OUTPUT
+          else
+            echo "available=false" >> $GITHUB_OUTPUT
+            echo "OSM data not available — skipping"
+          fi
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - uses: actions/download-artifact@v4
-        continue-on-error: true
+        if: steps.osm-check.outputs.available == 'true'
         with:
           name: sources-osm
           path: sources/
