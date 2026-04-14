@@ -1,4 +1,4 @@
-name: Update Data
+name: Run ETL Pipeline
 
 on:
   workflow_dispatch:
