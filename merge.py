@@ -199,16 +199,10 @@ def main():
         print("No records to output.")
         return
 
-    print(f"\nWriting per-source files...")
+    print(f"\nWriting per-source files ({len(records)} total records)...")
     write_per_source(records)
 
-    print(f"\nWriting combined output ({len(records)} total records)...")
-    write_csv(records, os.path.join(OUTPUT_DIR, "combined", "services.csv"))
-    write_json(records, os.path.join(OUTPUT_DIR, "combined", "services.json"))
-    write_sqlite(records, os.path.join(OUTPUT_DIR, "combined", "services.db"))
-    write_sources(SOURCES, os.path.join(OUTPUT_DIR, "combined", "SOURCES.md"))
-
-    print("\nDone.")
+    print("\nDone. Combined dataset will be built by the data repo.")
 
 
 if __name__ == "__main__":

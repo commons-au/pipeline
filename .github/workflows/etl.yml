@@ -61,32 +61,7 @@ jobs:
       - name: Copy output to data repo
         run: |
           find data-repo/gov -name '*.csv' -o -name 'SOURCES.md' | xargs rm -f
-          find data-repo/combined -name '*.csv' -o -name '*.json' -o -name '*.db' -o -name 'SOURCES.md' | xargs rm -f
           cp -r output/gov/. data-repo/gov/
-          cp -r output/combined/. data-repo/combined/
-
-      - name: Update README with fetch status
-        run: |
-          cd data-repo
-          DATE=$(date -u +"%d %B %Y")
-          RECORDS=$(tail -n +2 combined/services.csv | wc -l | tr -d ' ')
-          SOURCES=$(ls gov/*/SOURCES.md 2>/dev/null | wc -l | tr -d ' ')
-          STATUS="**Last updated**: ${DATE} | **${RECORDS} services** from **${SOURCES} state(s)**"
-          export STATUS
-          python3 << 'PYEOF'
-          import os, re
-          status = os.environ["STATUS"]
-          with open("README.md", "r") as f:
-              content = f.read()
-          content = re.sub(
-              r"<!-- PIPELINE_STATUS_START -->.*?<!-- PIPELINE_STATUS_END -->",
-              f"<!-- PIPELINE_STATUS_START -->\n{status}\n<!-- PIPELINE_STATUS_END -->",
-              content,
-              flags=re.DOTALL,
-          )
-          with open("README.md", "w") as f:
-              f.write(content)
-          PYEOF
 
       - name: Commit and push to data repo
         run: |
