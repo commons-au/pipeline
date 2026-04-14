@@ -20,7 +20,7 @@ from config import SOURCES
 SOURCES_DIR = os.path.join(os.path.dirname(__file__), "sources")
 TIMEOUT = 30
 HEADERS = {
-    "User-Agent": "commons-au/1.0 (https://github.com/commons-au; open data project)",
+    "User-Agent": "oa-sa/1.0 (https://github.com/oa-sa; open data project)",
 }
 
 

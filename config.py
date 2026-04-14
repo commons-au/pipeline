@@ -1,5 +1,5 @@
 """
-Data source configuration for the commons-au pipeline.
+Data source configuration for the oa-sa pipeline.
 
 Each source defines:
 - id: unique identifier used for filenames and tracking

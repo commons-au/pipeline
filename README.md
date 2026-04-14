@@ -1,6 +1,6 @@
-# commons-au pipeline
+# oa-sa pipeline
 
-Automated ETL pipeline that fetches open data from Australian government portals, standardises it into a common schema, and publishes the result to [commons-au/data](https://github.com/commons-au/data).
+Automated ETL pipeline that fetches open data from Australian government portals, standardises it into a common schema, and publishes the result to [oa-sa/data](https://github.com/oa-sa/data).
 
 ## How It Works
 
@@ -11,12 +11,12 @@ Government CKAN APIs → fetch.py → sources/ (raw CSVs)
                                       ↓
                                   merge.py → output/services.csv + services.json
                                       ↓
-                              GitHub Actions → pushes to commons-au/data
+                              GitHub Actions → pushes to oa-sa/data
 ```
 
 ## Data Sources
 
-All data is fetched from Australian government open data portals via their public CKAN APIs. See [commons-au/landscape](https://github.com/commons-au/landscape) for full documentation of these portals.
+All data is fetched from Australian government open data portals via their public CKAN APIs. See [oa-sa/landscape](https://github.com/oa-sa/landscape) for full documentation of these portals.
 
 | Portal | API Base URL |
 |--------|-------------|
@@ -45,7 +45,7 @@ The pipeline runs weekly via GitHub Actions (see `.github/workflows/etl.yml`). E
 
 1. Fetches the latest data from all government portals
 2. Cleans and standardises it
-3. Commits the result to [commons-au/data](https://github.com/commons-au/data)
+3. Commits the result to [oa-sa/data](https://github.com/oa-sa/data)
 
 ## Attribution
 

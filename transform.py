@@ -1,5 +1,5 @@
 """
-Transform raw source data into the commons-au standard schema.
+Transform raw source data into the oa-sa standard schema.
 
 Reads CSVs from sources/, applies field mappings and cleaning,
 and outputs standardised records.
