@@ -10,7 +10,7 @@ import os
 import re
 from datetime import date
 from config import SOURCES, CATEGORIES
-from clean import normalise_phone, normalise_website, normalise_suburb, normalise_description
+from clean import normalise_phone, normalise_website, normalise_suburb, normalise_description, resolve_location
 
 
 SOURCES_DIR = os.path.join(os.path.dirname(__file__), "sources")
@@ -531,6 +531,16 @@ def transform_source(source):
             record["description"] = normalise_description(
                 record.get("description", ""), record.get("name", "")
             )
+
+            # Resolve location (uses postcode centroid as fallback)
+            lat, lng, precision = resolve_location(
+                record.get("latitude", ""),
+                record.get("longitude", ""),
+                record.get("postcode", ""),
+            )
+            record["latitude"] = lat
+            record["longitude"] = lng
+            record["location_precision"] = precision
 
             # Normalise state
             record["state"] = normalise_state(record.get("state", ""))

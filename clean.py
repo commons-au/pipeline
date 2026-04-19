@@ -5,6 +5,8 @@ Each function takes a raw string and returns a normalised string.
 Empty/sentinel input returns "".
 """
 
+import csv
+import os
 import re
 from urllib.parse import urlsplit, urlunsplit, parse_qsl, urlencode
 
@@ -212,6 +214,56 @@ def normalise_suburb(value):
         result = pat.sub(repl, result)
 
     return result
+
+
+# ---------------------------------------------------------------------------
+# Postcode centroid geocoding fallback
+# ---------------------------------------------------------------------------
+
+_POSTCODE_CENTROIDS = None
+
+
+def _load_postcode_centroids():
+    global _POSTCODE_CENTROIDS
+    if _POSTCODE_CENTROIDS is not None:
+        return _POSTCODE_CENTROIDS
+    path = os.path.join(os.path.dirname(__file__), "reference", "postcodes.csv")
+    table = {}
+    with open(path, encoding="utf-8") as f:
+        for row in csv.DictReader(f):
+            table[row["postcode"]] = (row["latitude"], row["longitude"])
+    _POSTCODE_CENTROIDS = table
+    return table
+
+
+def resolve_location(latitude, longitude, postcode):
+    """
+    Return (lat, lng, precision).
+
+    precision is one of:
+    - "address"  — lat/lng came from the source, street-level
+    - "postcode" — lat/lng filled from postcode centroid, suburb-level
+    - "none"     — no coordinates at all
+    """
+    lat = (latitude or "").strip()
+    lng = (longitude or "").strip()
+
+    if lat and lng:
+        try:
+            flat = float(lat); flng = float(lng)
+            if -50 < flat < -5 and 100 < flng < 160:
+                return lat, lng, "address"
+        except ValueError:
+            pass
+
+    pc = (postcode or "").strip()
+    if len(pc) == 4 and pc.isdigit():
+        table = _load_postcode_centroids()
+        hit = table.get(pc)
+        if hit:
+            return hit[0], hit[1], "postcode"
+
+    return "", "", "none"
 
 
 # ---------------------------------------------------------------------------

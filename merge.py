@@ -96,7 +96,8 @@ def write_sqlite(records, path):
             source_license TEXT,
             source_url TEXT,
             source_date TEXT,
-            quality TEXT
+            quality TEXT,
+            location_precision TEXT
         )
     """)
 

@@ -38,6 +38,7 @@ SCHEMA_FIELDS = [
     "source_url",
     "source_date",
     "quality",
+    "location_precision",
 ]
 
 CATEGORIES = {
